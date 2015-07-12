@@ -32,6 +32,12 @@ body {
   width: 100px;
 }
 
+#title img:hover {
+  -ms-transform: rotate(7deg); /* IE 9 */
+  -webkit-transform: rotate(7deg); /* Chrome, Safari, Opera */
+  transform: rotate(7deg);
+}
+
 #title h1 {
   color: #8C8C8C;
   font-size: 24px;
@@ -56,7 +62,7 @@ body {
 }
 
 #description a:hover, a:focus {
-  font-style: italic;
+  text-shadow: 1px 1px #888888;
 }
 
 #volume {
@@ -65,7 +71,7 @@ body {
   right: 0;
 }
 .glyphicon-volume-down, .glyphicon-volume-up {
-  font-size: 2em;
+  font-size: 30px;
   position: absolute;
   color: black;
   text-shadow: 2px 2px white;
@@ -81,13 +87,17 @@ body {
   right: 20px;
 }
 
+.glyphicon-volume-up:active,  .glyphicon-volume-down:active{
+  font-size: 28px ;
+}
+
 #submit-button {
   background-color: #DB000F;
   border: #DB000F;
 }
 
 #submit-button:hover{
-  font-weight: bold;
+  box-shadow: 2px 2px 2px #888888;
 }
 
 .img {
