@@ -1,34 +1,102 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<script src="https://code.jquery.com/jquery.min.js"></script>
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.2/angular.min.js"></script>
-<script src="app.js"></script>
-<link href="app.css" type="text/css" />
-  <meta charset="utf-8">
-  <title>JS Bin</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="Make an application using the Spotify API">
+  <meta name="keywords" content="HTML, CSS, JavaScript, jQuery, Angular, Bootstrap, API">
+  <meta name="author" content="Tisha Trongtham">
+  <script src="https://code.jquery.com/jquery.min.js"></script>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.2/angular.min.js"></script>
+  <script src="app.js"></script>
+  <link href="app.css" type="text/css" rel="stylesheet"/>
+  <link rel="shortcut icon" href="img/vinyl.png">
+  <title>Your Next 5 Songs</title>
 </head>
-<body>
+
+<body style="overflow: auto">
+
+  <div id="title" class="img-circle">
+    <img src="img/vinyl.png"/>
+    <h1> Your Next 5 </h1>
+    <h2> SONGS </h2>
+  </div>
+
+  <div id="description">
+    <p> This application was based on the Seattle Public Libraries' <a href="https://www.spl.org/using-the-library/get-help/your-next-5-books">Your Next 5 Books</a>, an activity where the librarians recommend you five fantastic new reads depending on a book you liked. Here, we ask for your favorite song of the moment, and use the Spotify library to suggest five new songs we hope you will enjoy. </p>
+  </div>
+
   <div ng-app="myApp" ng-controller="myCtrl">
-  <form name="songForm">
-    <div class="form-group">
-      <label>Spotify search:</label>
-      <input name="search" ng-minlength=3 placeholder="Enter your search.." ng-model="track" class="form-control" required></input>
-    <p class="help-block" ng-show="songForm.search.$error.minlength">Enter 3+ characters</p>
+
+    <div id="volume">
+      <span class="glyphicon glyphicon-volume-up" ng-click="raiseVolume()"></span>
+      <span class="glyphicon glyphicon-volume-down" ng-click="lowerVolume()"></span>
     </div>
-    <div class="form-group">
-      <button ng-disabled="songForm.search.$invalid" class="btn btn-primary" ng-click="getSongs()" type="submit">Submit</button>
-    </div>
-  </form>
-  <div>
-      <div class="container-fixed">
-        <p ng-show="tracks.length>0" class="help-block">Click to sample</p>
-        <div ng-class="track.preview_url == currentSong ? 'playing' : ''"  ng-repeat="track in tracks" class="col-xs-4 img"><img ng-click="play(track.preview_url)" title="{{track.name}}" src="{{track.album.images[1].url}}"></img></div>
-    </div>
-    </div>
-  </div>
-  </div>
+
+    <form name="songForm" id="enterSong">
+      <div class="form-group">
+        <label>What is a song you currently like? </label>
+        <input id="search-bar" name="search" ng-minlength=1 placeholder="Enter the name of the song here.." ng-model="track" class="form-control" required></input>
+        <p class="help-block" ng-show="songForm.search.$error.minlength">Song name required.</p>
+        <p ng-show="songForm.search.$invalid && songForm.search.$touched" class="help-block">Please enter your song.</p>
+        <button id="submit-button" ng-disabled="songForm.search.$invalid" class="btn btn-primary" ng-click="getSongs(); reload()" type="submit">Show me my next five!</button>
+      </div>
+    </form>   
+
+      <div id="songResults" class="container-fixed" ng-hide="hideme" style="overflow:auto">
+        <p ng-show="tracks.length==0" class="help-block">No matching results :(</p>
+        <p ng-show="tracks.length>0" class="help-block">Please select the correct song. Hover over for more information! </p>
+        <div id="songButton" ng-class="track.preview_url == currentSong ? 'playing' : ''"  ng-repeat="track in tracks" class="col-xs-4 img">
+          <div class="album-cover" ng-click="play(track.preview_url); getSuggestedTracks(track); $parent.hideme=true; showResults()" style="background-image:url(img/no_img.jpg)" title='"{{track.name}}" by {{track.artists[0].name}} from "{{track.album.name}}"'>
+            <a>
+              <span class="play glyphicon glyphicon-music"></span>
+              <div class="overlay"></div>
+            </a>
+            <img src="{{track.album.images[1].url}}"></img>
+          </div>
+        </div>
+      </div>
+
+      <div id="nextFiveResults" class="container-fixed" ng-show="artistSelected" style="overflow:auto">
+
+        <div id="youSelected">
+          <h1> You Selected...</h1>
+           <p> "{{selectedTrack.name}}" by {{selectedArtist.name}} from <i> {{selectedTrack.album.name}} </i> </p>
+              <div id="selectedSong" class="album-cover img-circle" ng-click="play(selectedTrack.preview_url)" ng-class="selectedTrack.preview_url == currentSong ? 'playing' : ''" style="background-image:url(img/no_img.jpg)">
+                <a>
+                  <span class="play glyphicon glyphicon-music"></span>
+                  <div class="overlay img-circle"></div>
+                </a>
+                <img class="img-circle" src="{{selectedTrack.album.images[0].url}}"/>
+              </div>
+        </div>
+
+        <div id="nextFive">
+          <h1> Your Next 5 Songs Are... </h1>
+            <ol>
+              <div id="nextSongs" ng-repeat="i in [0, 1, 2, 3, 4]">
+                <p id="songDesc"> 
+                  <b> Name </b>: {{suggestedTracks[i].name}} <br/>
+                  <b> Artist </b>: {{suggestedArtists[i].name}} <br/>
+                  <b> Album </b>: {{suggestedTracks[i].album.name}} <br/>
+                  <b> Popularity </b>: {{suggestedTracks[i].popularity}}
+                </p> 
+                <div class="album-cover img-circle" ng-click="play(suggestedTracks[i].preview_url)" ng-class="suggestedTracks[i].preview_url == currentSong ? 'playing' : ''" style="background-image:url(img/no_img.jpg)">
+                  <a>
+                    <span class="play glyphicon glyphicon-music"></span>
+                    <div class="overlay img-circle"></div>
+                  </a>
+                  <img class="img-circle" src="{{suggestedTracks[i].album.images[0].url}}"/>
+                </div>
+              </div>
+            </ol>
+          </div>
+
+      </div> <!-- nextFiveResults-->
+
+  </div> <!-- myApp -->
+
 </body>
 </html>
